@@ -1,6 +1,6 @@
 "use client"; // Important: this ensures the wallet SDK only runs on the client
 
-import { useAuth, useWallet } from "@crossmint/client-sdk-react-ui";
+import { EVMSmartWallet, useAuth, useWallet } from "@crossmint/client-sdk-react-ui";
 import { useEffect, useState } from "react";
 import { abi } from "./abi/usdc";
 
@@ -30,8 +30,8 @@ function AuthButton() {
   );
 }
 
-const formatBalance = (balance: any) => {
-  const raw = String(BigInt(balance ?? 0));
+const formatBalance = (balance: bigint) => {
+  const raw = String(balance);
   const decimals = 6;
   
   if (raw.length <= decimals) {
@@ -49,10 +49,10 @@ export default function Home() {
   const { wallet } = useWallet();
 
   const [betNumber, setBetNumber] = useState('');
-  const [balance, setBalance] = useState(null);
+  const [balance, setBalance] = useState<bigint>(BigInt(0));
 
   useEffect(() => {
-    async function getBalance(wallet: any) {
+    async function getBalance(wallet: EVMSmartWallet | undefined) {
       const result = await wallet?.client.public.readContract({
         abi: abi,
         address: "0x14196F08a4Fa0B66B7331bC40dd6bCd8A1dEeA9F",
@@ -60,13 +60,15 @@ export default function Home() {
         args: ["0x2d9196E5dA3Db32b184B4a023948A0d475989483"],
       });
 
-      setBalance(result);
+      if (result){
+        setBalance(result);
+      }
     }
 
     getBalance(wallet);
   }, [wallet]);
 
-  async function bet(wallet: any, amount: number) {
+  async function bet(wallet: EVMSmartWallet | undefined, amount: number) {
     const result = wallet?.executeContract({
       abi: abi,
       address: "0x14196F08a4Fa0B66B7331bC40dd6bCd8A1dEeA9F",
