@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+N.B. This project calls the [betmore-api](https://github.com/vaughanlove/betmore-api).
+
 First, run the development server:
 
 ```bash
