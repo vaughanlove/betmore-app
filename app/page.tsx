@@ -4,26 +4,22 @@ import { EVMSmartWallet, useAuth, useWallet } from "@crossmint/client-sdk-react-
 import { useEffect, useState } from "react";
 import { abi } from "./abi/usdc";
 
-function AuthButton() {
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '')
+
+export function AuthButton() {
   const { login, logout, jwt } = useAuth();
 
   return (
     <div>
-      {jwt == null ? (
+      {jwt == null && (
         <button 
           type="button" 
           onClick={login} 
           className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
         >
           Login
-        </button>
-      ) : (
-        <button 
-          type="button" 
-          onClick={logout} 
-          className="bg-black text-white font-bold py-2 px-4 rounded border-2 border-blue-500"
-        >
-          Logout
         </button>
       )}
     </div>
@@ -53,11 +49,12 @@ export default function Home() {
 
   useEffect(() => {
     async function getBalance(wallet: EVMSmartWallet | undefined) {
+
       const result = await wallet?.client.public.readContract({
         abi: abi,
         address: "0x14196F08a4Fa0B66B7331bC40dd6bCd8A1dEeA9F",
         functionName: "balanceOf",
-        args: ["0x2d9196E5dA3Db32b184B4a023948A0d475989483"],
+        args: [wallet?.address],
       });
 
       if (result){
