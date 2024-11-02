@@ -1,6 +1,8 @@
 "use client"; // Important: this ensures the wallet SDK only runs on the client
 
-import { useAuth } from "@crossmint/client-sdk-react-ui";
+import { useAuth, useWallet } from "@crossmint/client-sdk-react-ui";
+import { useEffect, useState } from "react";
+import { abi } from "./abi/usdc";
 
 function AuthButton() {
   const { login, logout, jwt } = useAuth();
@@ -28,16 +30,78 @@ function AuthButton() {
   );
 }
 
+const formatBalance = (balance: any) => {
+  const raw = String(BigInt(balance ?? 0));
+  const decimals = 6;
+  
+  if (raw.length <= decimals) {
+    return `0.${raw.padStart(decimals, '0')}`;
+  }
+  
+  const integerPart = raw.slice(0, -decimals);
+  const decimalPart = raw.slice(-decimals);
+  return `${integerPart}.${decimalPart}`;
+};
+
 
 export default function Home() {
+    const { user } = useAuth();
+  const { wallet } = useWallet();
+
+  const [betNumber, setBetNumber] = useState('');
+  const [balance, setBalance] = useState(null);
+
+  useEffect(() => {
+    async function getBalance(wallet: any) {
+      const result = await wallet?.client.public.readContract({
+        abi: abi,
+        address: "0x14196F08a4Fa0B66B7331bC40dd6bCd8A1dEeA9F",
+        functionName: "balanceOf",
+        args: ["0x2d9196E5dA3Db32b184B4a023948A0d475989483"],
+      });
+
+      setBalance(result);
+    }
+
+    getBalance(wallet);
+  }, [wallet]);
+
+  async function bet(wallet: any, amount: number) {
+    const result = wallet?.executeContract({
+      abi: abi,
+      address: "0x14196F08a4Fa0B66B7331bC40dd6bCd8A1dEeA9F",
+      functionName: "transfer",
+      args: ["0x2d9196E5dA3Db32b184B4a023948A0d475989483", BigInt(amount * 6)],
+    });
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="absolute top-0 right-0 p-4">
-        <AuthButton />
+          <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
+    <div className="container mx-auto px-4">
+      <div className="flex h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-8">
+          <h1 className="text-7xl font-bold text-white">
+            BET<span className="text-blue-500">MORE</span>
+          </h1>
+
+          <div className="flex items-center gap-4">
+            <AuthButton />
+          </div>
+
+          {wallet && (
+            <div className="flex flex-col items-center gap-4 rounded-lg bg-gray-800/50 p-6">
+              <div className="text-xl text-gray-400">Your Balance</div>
+              <div className="text-2xl font-bold text-white">
+                {formatBalance(balance)} USDC
+              </div>
+              
+            
+            </div>
+          )}
+        </div>
       </div>
-      <div className="flex items-center justify-center w-full h-full">
-      </div>
-    </main>
+    </div>
+  </div>  
   );
 }
 
